@@ -1,0 +1,50 @@
+pipeline:
+  id: pipeline_ngusadeep_1code_build_b1cc
+  name: pipeline_ngusadeep_1code_build_b1cc
+  stages:
+    - name: Build
+      id: build
+      clone:
+        enabled: true
+      runtime: cloud
+      platform:
+        os: linux
+        arch: amd64
+      cache:
+        enabled: true
+      steps:
+        - name: Install Bun
+          id: install_bun
+          run:
+            shell: bash
+            script: |-
+              curl -fsSL https://bun.sh/install | bash
+              export BUN_INSTALL="$HOME/.bun"
+              export PATH="$BUN_INSTALL/bin:$PATH"
+              bun --version
+              echo "export BUN_INSTALL=\"\$HOME/.bun\"" >> /harness/.bashrc
+              echo "export PATH=\"\$BUN_INSTALL/bin:\$PATH\"" >> /harness/.bashrc
+        - name: Install Dependencies
+          id: install_deps
+          run:
+            shell: bash
+            script: |-
+              source /harness/.bashrc
+              export VERCEL=1
+              bun install
+        - name: TypeScript Check
+          id: ts_check
+          run:
+            shell: bash
+            script: |-
+              source /harness/.bashrc
+              npx tsc --noEmit
+        - name: Build
+          id: build_app
+          run:
+            shell: bash
+            script: |-
+              source /harness/.bashrc
+              bun run build
+  tags:
+    onboarding: "true"
